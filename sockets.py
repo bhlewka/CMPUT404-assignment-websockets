@@ -114,6 +114,7 @@ def read_ws(ws,client):
                 dic = packet[1]
                 for key in dic:
                     myWorld.update(entity, key, dic[key])
+                
             else:
                 break
     except:
