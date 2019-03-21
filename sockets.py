@@ -63,25 +63,48 @@ myWorld = World()
 
 def set_listener( entity, data ):
     ''' do something with the update ! '''
+    # Would we update the world here too?
 
 myWorld.add_set_listener( set_listener )
         
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return flask.redirect("/static/index.html", 302)
 
 def read_ws(ws,client):
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
-    return None
+    # So is the client a listener??
+    
+    # taken from the in class examples
+    try:
+        while True:
+            content = ws.receive()
+            print("Received the content")
+            if (content is not None):
+                packet = json.loads(content)
+                print(packet)
+                # myWorld.update_listeners(entity)
+            else:
+                break
+
+    except:
+        # Done
+        pass
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     '''Fufill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
     # XXX: TODO IMPLEMENT ME
-    return None
+    
+    g = gevent.spawn()
+
+
+
+    return
+
 
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
@@ -99,23 +122,35 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    # Hopefully this is the same as the AJAX portion
+    # Data is a dictionary with an x key,value and a y key,value
+    data = flask_post_json()
+    # print(data, entity)
+    
+    for key in data:
+        myWorld.update(entity, key, data[key])
+    
+    response = app.response_class(response=json.dumps(myWorld.get(entity)), status=200, mimetype="application/json")
+    return response
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    response = app.response_class(response=json.dumps(myWorld.world()), status=200, mimetype="application/json")
+    return response
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    response = app.response_class(response=json.dumps(myWorld.get(entity)))
+    return response
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return world()
 
 
 
