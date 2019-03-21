@@ -26,6 +26,26 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
+# This client stuff all taken from class
+class Client:
+    def __init__(self):
+        self.queue = queue.Queue()
+
+    def put(self, v):
+        self.queue.put_nowait(v)
+
+    def get(self):
+        return self.queue.get()
+
+clients = list()
+
+def send_all(msg):
+    for client in clients:
+        client.put( msg )
+
+def send_all_json(obj):
+    send_all( json.dumps(obj) )
+
 class World:
     def __init__(self):
         self.clear()
@@ -64,6 +84,7 @@ myWorld = World()
 def set_listener( entity, data ):
     ''' do something with the update ! '''
     # Would we update the world here too?
+    # Is this when a new listener joins? idk
 
 myWorld.add_set_listener( set_listener )
         
@@ -80,30 +101,44 @@ def read_ws(ws,client):
     # taken from the in class examples
     try:
         while True:
-            content = ws.receive()
-            print("Received the content")
-            if (content is not None):
-                packet = json.loads(content)
-                print(packet)
-                # myWorld.update_listeners(entity)
+            msg = ws.receive()
+            print("WS RECV: %s" % msg)
+            if (msg is not None):
+                packet = json.loads(msg)
+
+                # This is from the example, not sure if needed
+                send_all_json( packet )
+                
+                # so packet is the entity to add to the world
+                entity = packet[0]
+                dic = packet[1]
+                for key in dic:
+                    myWorld.update(entity, key, dic[key])
             else:
                 break
-
     except:
-        # Done
-        pass
+        '''Done'''
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     '''Fufill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
     # XXX: TODO IMPLEMENT ME
+    # Taken from class
+    client = Client()
+    clients.append(client)
+    g = gevent.spawn( read_ws, ws, client )    
+    try:
+        while True:
+            # block here
+            msg = client.get()
+            ws.send(msg)
+    except Exception as e:# WebSocketError as e:
+        print("WS Error %s" % e)
+    finally:
+        clients.remove(client)
+        gevent.kill(g)
     
-    g = gevent.spawn()
-
-
-
-    return
 
 
 

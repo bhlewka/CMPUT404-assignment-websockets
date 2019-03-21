@@ -121,10 +121,21 @@ function getPosition(e) {
 	}
 }
 
+function receiveEntity(entity, data) {
+    // This is the same as addEntity, except it does not send
+    // the entity to the server
+    world[entity] = data;
+    drawNextFrame();
+}
+
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
+    // Nope, just gonna send the entitity to the websocket here instead
+    message = [entity, data]
+    socket.send(JSON.stringify(message))
+
 }
 var counter = 0;
 function addEntityWithoutName(data) {
@@ -254,7 +265,10 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
-        // I think send the drawn data?
+        // Receive the world here
+        // Basically will be the same as onmessage???
+        // Something needs to happen when a connection is established 
+
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -262,7 +276,16 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?  
+            // The webserver will send the new entity to the client
+            // Here the client will update their world with the received entity
+            let entity = msg.data[0]
+            let dic = msg.data[1]
+
+            for (let key in dic ){
+                receiveEntity(entity, key, dic[key])
+            }
+              
         } catch (e) {
             alert("socket on message: " + e);
         }
