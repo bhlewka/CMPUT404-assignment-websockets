@@ -59,3 +59,10 @@ Contributors
 * Mark Galloway
 * Abram Hindle
 * Cole Mackenzie
+
+* With some assignment modifications by Ben Hlewka
+
+Soft Colab
+============
+* james vo
+* calvin lee
