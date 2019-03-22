@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html> 
   <head> 
-    <title>Websockets Assignment</title> 
+    <title>WaterSocket Simulator</title> 
     <meta charset="utf-8" /> 
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
@@ -37,8 +37,8 @@ var wscounter = 0;
 var socket;
 
 function debug(str) {
-    var debugDiv = document.getElementById('debug');
-    debugDiv.innerHTML = "" + str;
+    // var debugDiv = document.getElementById('debug');
+    // debugDiv.innerHTML = "" + str;
 }
 debug("Test");
 
@@ -48,7 +48,17 @@ world = {};
 function drawCircle(context,entity) {
     with(context) {
         beginPath();                
-        lineWidth = 3;
+        lineWidth = 100;
+
+        // Lets make the circle grow and shrink
+        lineWidth = 100;
+        if (Math.random() > 0.5){
+            lineWidth++;
+        }
+        else{
+            lineWidth--;
+        }
+
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
@@ -72,7 +82,7 @@ function prepEntity(entity) {
 function clearFrame() {
     with(context) {
 	moveTo(0,0);
-	fillStyle = "#000";
+	fillStyle = "#ffffff";
 	fillRect(0,0,W,H);
     }
 
@@ -81,8 +91,8 @@ function clearFrame() {
 // This actually draws the frame
 function renderFrame() {
     clearFrame();
-    console.log("rendering the frame");
-    console.log(world)
+    // console.log("rendering the frame");
+    // console.log(world)
     for (var key in world) {
         var entity = world[key];
         drawCircle(context,prepEntity(entity));
@@ -246,16 +256,16 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#00ff48',"radius":3});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#e04a4a','radius':3});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    addEntityWithoutName({'x':x,'y':y,'colour':'#00e1ff',
+                          'radius':1});
 });
 
 
@@ -271,6 +281,8 @@ function wsSetup() {
         //XXX: TODO What are you going to do here?
         // Receive the world here
         // nvm, do that down below
+        // Maybe set the interval in here?
+
 
     };
     socket.onerror = function(msg) {
@@ -280,21 +292,22 @@ function wsSetup() {
         try {
             debug("WebSocket Recv:" + msg.data);
             let data = JSON.parse(msg.data)
-            console.log(typeof data)
+            // console.log(typeof data)
             //XXX: TODO What are you going to do here?  
             // The webserver will send the new entity to the client
             // Here the client will update their world with the received entity
             
             // console.log(data)
-            for (let entity in data ){
+            for (var entity in data ){
                 // console.log("entity", entity)
-                for (let key in data[entity]){
-                    console.log("entity/key/value", entity, key, data[entity][key])
-                    receiveEntity(entity, key, data[entity][key])
-                }
+                // for (var key in data[entity]){
+                    // console.log("entity/key/value", entity, key, data[entity][key])
+                receiveEntity(entity, data[entity])
+                    // console.log("world", world)
+                // }
                 
             }
-            renderFrame()
+
               
         } catch (e) {
             alert("socket on message: " + e);
