@@ -95,9 +95,7 @@ def hello():
 
 def read_ws(ws,client):
     '''A greenlet function that reads from the websocket and updates the world'''
-    # XXX: TODO IMPLEMENT ME
-    # So is the client a listener??
-    
+    # XXX: TODO IMPLEMENT ME    
     # taken from the in class examples
     try:
         while True:
@@ -110,10 +108,9 @@ def read_ws(ws,client):
                 send_all_json( packet )
                 
                 # so packet is the entity to add to the world
-                entity = packet[0]
-                dic = packet[1]
-                for key in dic:
-                    myWorld.update(entity, key, dic[key])
+                for entity in packet:
+                    for value in packet[entity]:
+                        myWorld.update(entity, value, packet[entity][value])
                 
             else:
                 break
@@ -130,6 +127,8 @@ def subscribe_socket(ws):
     clients.append(client)
     g = gevent.spawn( read_ws, ws, client )    
     try:
+        # print(myWorld.world())
+        ws.send(json.dumps(myWorld.world()))
         while True:
             # block here
             msg = client.get()

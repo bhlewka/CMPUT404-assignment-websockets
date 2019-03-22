@@ -81,6 +81,8 @@ function clearFrame() {
 // This actually draws the frame
 function renderFrame() {
     clearFrame();
+    console.log("rendering the frame");
+    console.log(world)
     for (var key in world) {
         var entity = world[key];
         drawCircle(context,prepEntity(entity));
@@ -130,11 +132,13 @@ function receiveEntity(entity, data) {
 
 function addEntity(entity, data) {
     world[entity] = data;
+    
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
     // Nope, just gonna send the entitity to the websocket here instead
-    message = [entity, data]
-    socket.send(JSON.stringify(message))
+    let message = {};
+    message[entity] = data
+    socket.send(JSON.stringify(message));
 
 }
 var counter = 0;
@@ -266,8 +270,7 @@ function wsSetup() {
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
         // Receive the world here
-        // Basically will be the same as onmessage???
-        // Something needs to happen when a connection is established 
+        // nvm, do that down below
 
     };
     socket.onerror = function(msg) {
@@ -276,15 +279,22 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
+            let data = JSON.parse(msg.data)
+            console.log(typeof data)
             //XXX: TODO What are you going to do here?  
             // The webserver will send the new entity to the client
             // Here the client will update their world with the received entity
-            let entity = msg.data[0]
-            let dic = msg.data[1]
-
-            for (let key in dic ){
-                receiveEntity(entity, key, dic[key])
+            
+            // console.log(data)
+            for (let entity in data ){
+                // console.log("entity", entity)
+                for (let key in data[entity]){
+                    console.log("entity/key/value", entity, key, data[entity][key])
+                    receiveEntity(entity, key, data[entity][key])
+                }
+                
             }
+            renderFrame()
               
         } catch (e) {
             alert("socket on message: " + e);
